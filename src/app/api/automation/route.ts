@@ -7,7 +7,7 @@ const client = new OpenAI({
   baseURL: "https://openrouter.ai/api/v1",
 });
 
-// GET — Fetch all workflows
+// GET — Fetch all workflows with execution history
 export async function GET() {
   try {
     const workflows = await prisma.workflow.findMany({
@@ -199,6 +199,7 @@ Do not claim that an external service was actually contacted or that an external
       response.choices[0]?.message?.content ||
       "Ninu AI could not generate a workflow result.";
 
+    // Save successful execution to database
     const execution = await prisma.execution.create({
       data: {
         workflowId: workflow.id,
