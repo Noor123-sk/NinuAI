@@ -1,28 +1,46 @@
 import { NextResponse } from "next/server";
 import OpenAI from "openai";
-
-type Workflow = {
-  id: string;
-  name: string;
-  trigger: string;
-  action: string;
-  status: "active" | "paused";
-  createdAt: string;
-};
-
-const workflows: Workflow[] = [];
+import { prisma } from "@/lib/prisma";
 
 const client = new OpenAI({
   apiKey: process.env.OPENROUTER_API_KEY!,
   baseURL: "https://openrouter.ai/api/v1",
 });
 
+// GET — Fetch all workflows
 export async function GET() {
-  return NextResponse.json({
-    workflows,
-  });
+  try {
+    const workflows = await prisma.workflow.findMany({
+      orderBy: {
+        createdAt: "desc",
+      },
+      include: {
+        executions: {
+          orderBy: {
+            createdAt: "desc",
+          },
+        },
+      },
+    });
+
+    return NextResponse.json({
+      workflows,
+    });
+  } catch (error) {
+    console.error("Automation GET Error:", error);
+
+    return NextResponse.json(
+      {
+        error: "Ninu Automation could not load workflows.",
+      },
+      {
+        status: 500,
+      }
+    );
+  }
 }
 
+// POST — Create workflow
 export async function POST(request: Request) {
   try {
     const body = await request.json();
@@ -54,16 +72,14 @@ export async function POST(request: Request) {
       );
     }
 
-    const workflow: Workflow = {
-      id: crypto.randomUUID(),
-      name,
-      trigger,
-      action,
-      status: "active",
-      createdAt: new Date().toISOString(),
-    };
-
-    workflows.unshift(workflow);
+    const workflow = await prisma.workflow.create({
+      data: {
+        name,
+        trigger,
+        action,
+        status: "active",
+      },
+    });
 
     return NextResponse.json(
       {
@@ -75,7 +91,7 @@ export async function POST(request: Request) {
       }
     );
   } catch (error) {
-    console.error("Automation API Error:", error);
+    console.error("Automation POST Error:", error);
 
     return NextResponse.json(
       {
@@ -89,6 +105,7 @@ export async function POST(request: Request) {
   }
 }
 
+// PUT — Execute workflow
 export async function PUT(request: Request) {
   try {
     const body = await request.json();
@@ -109,9 +126,11 @@ export async function PUT(request: Request) {
       );
     }
 
-    const workflow = workflows.find(
-      (item) => item.id === workflowId
-    );
+    const workflow = await prisma.workflow.findUnique({
+      where: {
+        id: workflowId,
+      },
+    });
 
     if (!workflow) {
       return NextResponse.json(
@@ -180,9 +199,18 @@ Do not claim that an external service was actually contacted or that an external
       response.choices[0]?.message?.content ||
       "Ninu AI could not generate a workflow result.";
 
+    const execution = await prisma.execution.create({
+      data: {
+        workflowId: workflow.id,
+        status: "completed",
+        result,
+      },
+    });
+
     return NextResponse.json({
       message: "Workflow executed successfully.",
       workflowId: workflow.id,
+      executionId: execution.id,
       result,
     });
   } catch (error) {
