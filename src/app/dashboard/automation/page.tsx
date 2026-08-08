@@ -20,7 +20,12 @@ export default function AutomationPage() {
   const [action, setAction] = useState("Ask Ninu AI");
 
   const [loading, setLoading] = useState(false);
+  const [runningId, setRunningId] = useState<string | null>(
+    null
+  );
+
   const [error, setError] = useState("");
+  const [result, setResult] = useState("");
 
   async function loadWorkflows() {
     try {
@@ -86,6 +91,47 @@ export default function AutomationPage() {
       );
     } finally {
       setLoading(false);
+    }
+  }
+
+  async function runWorkflow(workflowId: string) {
+    if (runningId) {
+      return;
+    }
+
+    setRunningId(workflowId);
+    setError("");
+    setResult("");
+
+    try {
+      const response = await fetch("/api/automation", {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          workflowId,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(
+          data.error || "Workflow execution failed."
+        );
+      }
+
+      setResult(data.result || "Workflow completed.");
+    } catch (error: any) {
+      console.error("Workflow Execution Error:", error);
+
+      setError(
+        error?.message ||
+          "Ninu could not execute the workflow."
+      );
+    } finally {
+      setRunningId(null);
     }
   }
 
@@ -206,6 +252,27 @@ export default function AutomationPage() {
         </div>
       )}
 
+      {/* Workflow Result */}
+      {(result || error) && (
+        <div className="mt-8 bg-white border rounded-3xl p-8 max-w-4xl">
+          <h3 className="text-xl font-bold mb-4">
+            🤖 Workflow Result
+          </h3>
+
+          {error ? (
+            <p className="text-red-600">
+              {error}
+            </p>
+          ) : (
+            <div className="bg-gray-100 rounded-2xl p-5">
+              <pre className="whitespace-pre-wrap font-sans text-gray-700 text-sm leading-6">
+                {result}
+              </pre>
+            </div>
+          )}
+        </div>
+      )}
+
       {/* Workflows */}
       <div className="mt-10">
         <h3 className="text-2xl font-bold mb-5">
@@ -248,6 +315,21 @@ export default function AutomationPage() {
                 <span className="inline-block mt-5 bg-gray-100 px-4 py-2 rounded-full text-sm">
                   {workflow.status}
                 </span>
+
+                <button
+                  onClick={() =>
+                    runWorkflow(workflow.id)
+                  }
+                  disabled={
+                    runningId !== null ||
+                    workflow.status !== "active"
+                  }
+                  className="mt-5 w-full bg-black text-white px-5 py-3 rounded-full disabled:opacity-50"
+                >
+                  {runningId === workflow.id
+                    ? "🤖 Running..."
+                    : "▶ Run Workflow"}
+                </button>
               </div>
             ))}
           </div>
@@ -287,7 +369,7 @@ export default function AutomationPage() {
               Run Your Workflow
             </h4>
             <p className="text-gray-500 mt-2">
-              Your workflow is ready to be automated.
+              Execute your workflow whenever you need it.
             </p>
           </div>
         </div>
