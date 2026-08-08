@@ -1,0 +1,3 @@
+Ninu AI is an all-in-one AI platform.
+It provides AI chat, image generation, coding assistance, and document analysis.
+The goal is to help users complete different AI tasks from one simple platform.
