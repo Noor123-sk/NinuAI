@@ -39,6 +39,17 @@ export default function Sidebar() {
           </Link>
 
           <Link
+            href="/dashboard/video"
+            className={`block px-4 py-3 rounded-xl transition ${
+              pathname === "/dashboard/video"
+                ? "bg-gray-800"
+                : "hover:bg-gray-800"
+            }`}
+          >
+            🎬 Video AI
+          </Link>
+
+          <Link
             href="/dashboard/vision"
             className={`block px-4 py-3 rounded-xl transition ${
               pathname === "/dashboard/vision"
