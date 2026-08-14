@@ -8,13 +8,18 @@ datasource db {
 }
 
 model Workflow {
-  id         String      @id @default(cuid())
-  name       String
-  trigger    String
-  action     String
-  status     String      @default("active")
-  createdAt  DateTime    @default(now())
-  executions Execution[]
+  id             String      @id @default(cuid())
+  name           String
+  trigger        String
+  action         String
+  status         String      @default("active")
+  instructions   String?
+  scheduleType   String?
+  nextRunAt      DateTime?
+  webhookEnabled Boolean     @default(false)
+  webhookToken   String?     @unique
+  createdAt      DateTime    @default(now())
+  executions     Execution[]
 }
 
 model Execution {
@@ -23,7 +28,23 @@ model Execution {
   status     String
   result     String?
   createdAt  DateTime @default(now())
+  input      String?
+  source     String   @default("manual")
   workflow   Workflow @relation(fields: [workflowId], references: [id], onDelete: Cascade)
 
   @@index([workflowId])
+  @@index([createdAt])
+}
+
+model DataAnalysis {
+  id          String   @id @default(cuid())
+  fileName    String
+  fileType    String?
+  rowCount    Int
+  columnCount Int
+  columns     Json
+  preview     Json?
+  createdAt   DateTime @default(now())
+
+  @@index([createdAt])
 }
