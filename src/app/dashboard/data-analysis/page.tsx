@@ -43,6 +43,10 @@ type DatasetResponse = {
     columnNames: string[];
     preview: Record<string, unknown>[];
     columnAnalysis: ColumnAnalysis[];
+    aggregateStats: {
+      numericColumnTotals: Record<string, number>;
+      numericColumnCounts: Record<string, number>;
+    };
   };
 };
 
@@ -246,6 +250,8 @@ const askNinu = async () => {
                   dataType: column.dataType,
                 })
               ),
+            aggregateStats:
+              result.dataset.aggregateStats,
           }),
         }
       );

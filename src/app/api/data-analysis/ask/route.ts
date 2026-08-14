@@ -10,6 +10,10 @@ type AskRequest = {
     name: string;
     dataType: string;
   }[];
+  aggregateStats?: {
+    numericColumnTotals: Record<string, number>;
+    numericColumnCounts: Record<string, number>;
+  };
 };
 
 const apiKey = process.env.OPENROUTER_API_KEY;
@@ -87,6 +91,14 @@ ${JSON.stringify(datasetSample, null, 2)}
 Column information:
 
 ${JSON.stringify(body.columnAnalysis ?? [], null, 2)}
+
+EXACT DATASET AGGREGATES:
+${JSON.stringify(body.aggregateStats ?? {}, null, 2)}
+
+IMPORTANT:
+- The aggregate totals above are calculated from the COMPLETE dataset.
+- When the user asks for totals, sums, averages, counts, or other calculations that can be answered from these aggregates, TRUST THESE VALUES over calculating from the preview.
+- Never recalculate a complete-dataset total using only the preview rows.
 
 User question:
 

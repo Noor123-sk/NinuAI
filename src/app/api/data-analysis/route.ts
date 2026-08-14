@@ -235,6 +235,39 @@ export async function POST(request: Request) {
       };
     });
 
+    // Calculate exact dataset aggregates
+    const numericColumnTotals: Record<string, number> = {};
+    const numericColumnCounts: Record<string, number> = {};
+
+    for (const column of columnAnalysis) {
+      if (column.dataType !== "number") {
+        continue;
+      }
+
+      let total = 0;
+      let count = 0;
+
+      for (const row of normalizedRows) {
+        const value = row[column.name];
+
+        if (typeof value === "number" && Number.isFinite(value)) {
+          total += value;
+          count += 1;
+        }
+      }
+
+      numericColumnTotals[column.name] = Number(
+        total.toFixed(4)
+      );
+
+      numericColumnCounts[column.name] = count;
+    }
+
+    const aggregateStats = {
+      numericColumnTotals,
+      numericColumnCounts,
+    };
+
     const preview = normalizedRows
       .slice(0, 10)
       .map((row) => {
@@ -272,6 +305,7 @@ return NextResponse.json({
         columnNames: columns,
         preview,
         columnAnalysis,
+        aggregateStats,
       },
     });
   } catch (error: any) {
