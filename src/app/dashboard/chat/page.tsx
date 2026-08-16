@@ -72,6 +72,70 @@ export default function ChatPage() {
     setActiveChat(newChat);
   }
 
+  function renameChat(chatId: string) {
+    const chat = chats.find((item) => item.id === chatId);
+
+    if (!chat) return;
+
+    const newTitle = window.prompt("Rename chat", chat.title);
+
+    if (!newTitle?.trim()) return;
+
+    const updatedChat = {
+      ...chat,
+      title: newTitle.trim().slice(0, 40),
+    };
+
+    setChats((prev) =>
+      prev.map((item) =>
+        item.id === chatId ? updatedChat : item
+      )
+    );
+
+    if (activeChat?.id === chatId) {
+      setActiveChat(updatedChat);
+    }
+  }
+
+  function deleteChat(chatId: string) {
+    const chat = chats.find((item) => item.id === chatId);
+
+    if (!chat) return;
+
+    const confirmed = window.confirm(
+      `Delete "${chat.title}"?`
+    );
+
+    if (!confirmed) return;
+
+    const remainingChats = chats.filter(
+      (item) => item.id !== chatId
+    );
+
+    if (remainingChats.length === 0) {
+      const newChat: Chat = {
+        id: crypto.randomUUID(),
+        title: "New Chat",
+        messages: [
+          {
+            role: "ai",
+            text: "Hello! I am Ninu AI. How can I help you?",
+          },
+        ],
+      };
+
+      setChats([newChat]);
+      setActiveChat(newChat);
+      return;
+    }
+
+    setChats(remainingChats);
+
+    if (activeChat?.id === chatId) {
+      setActiveChat(remainingChats[0]);
+    }
+  }
+
   async function sendMessage() {
     if (!message.trim() || !activeChat || loading) {
       return;
@@ -107,6 +171,27 @@ export default function ChatPage() {
     setMessage("");
     setLoading(true);
 
+    let language = "Auto";
+    let responseStyle = "Balanced";
+
+    const savedSettings = localStorage.getItem("ninu-settings");
+
+    if (savedSettings) {
+      try {
+        const settings = JSON.parse(savedSettings);
+
+        if (typeof settings.language === "string") {
+          language = settings.language;
+        }
+
+        if (typeof settings.responseStyle === "string") {
+          responseStyle = settings.responseStyle;
+        }
+      } catch {
+        console.warn("Could not read Ninu settings.");
+      }
+    }
+
     try {
       const response = await fetch("/api/chat", {
         method: "POST",
@@ -115,6 +200,8 @@ export default function ChatPage() {
         },
         body: JSON.stringify({
           messages: updatedMessages,
+          language,
+          responseStyle,
         }),
       });
 
@@ -209,14 +296,37 @@ export default function ChatPage() {
           {chats.map((chat) => (
             <div
               key={chat.id}
-              onClick={() => setActiveChat(chat)}
-              className={`p-3 rounded-xl cursor-pointer ${
+              className={`group flex items-center gap-2 p-3 rounded-xl ${
                 activeChat.id === chat.id
                   ? "bg-gray-100 text-black"
                   : "hover:bg-gray-100 text-gray-600"
               }`}
             >
-              {chat.title}
+              <button
+                onClick={() => setActiveChat(chat)}
+                className="flex-1 text-left truncate"
+                title={chat.title}
+              >
+                {chat.title}
+              </button>
+
+              <button
+                onClick={() => renameChat(chat.id)}
+                className="opacity-0 group-hover:opacity-100 text-sm px-1"
+                title="Rename chat"
+                aria-label={`Rename ${chat.title}`}
+              >
+                ✏️
+              </button>
+
+              <button
+                onClick={() => deleteChat(chat.id)}
+                className="opacity-0 group-hover:opacity-100 text-sm px-1"
+                title="Delete chat"
+                aria-label={`Delete ${chat.title}`}
+              >
+                🗑️
+              </button>
             </div>
           ))}
         </div>
