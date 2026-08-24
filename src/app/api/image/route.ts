@@ -35,7 +35,7 @@ export async function POST(request: Request) {
           content: prompt,
         },
       ],
-      
+      max_tokens: 4096,
     });
 
     const message = response.choices[0]?.message;
