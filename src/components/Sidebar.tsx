@@ -2,9 +2,18 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useChat } from "@/context/ChatContext";
 
 export default function Sidebar() {
   const pathname = usePathname();
+  const {
+    chats,
+    activeChat,
+    setActiveChat,
+    createNewChat,
+    renameChat,
+    deleteChat,
+  } = useChat();
 
   return (
     <aside className="w-64 min-h-screen bg-black text-white p-6 flex flex-col">
@@ -26,6 +35,7 @@ export default function Sidebar() {
           >
             🗨 Chat
           </Link>
+
 
           <Link
             href="/image-generator"
@@ -114,6 +124,60 @@ export default function Sidebar() {
           >
             ⚙ Settings
           </Link>
+
+          {pathname === "/dashboard/chat" && (
+            <div className="mt-2 ml-2">
+              <button
+                onClick={createNewChat}
+                className="w-full text-left px-3 py-2 rounded-lg bg-gray-800 hover:bg-gray-700 text-sm transition"
+              >
+                + New Chat
+              </button>
+
+              <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mt-5 mb-2 px-2">
+                Recent Chats
+              </p>
+
+              <div className="space-y-1 max-h-64 overflow-y-auto pr-1">
+                {chats.map((chat) => (
+                  <div
+                    key={chat.id}
+                    className={`group flex items-center gap-1 rounded-lg transition ${
+                      activeChat?.id === chat.id
+                        ? "bg-gray-700"
+                        : "hover:bg-gray-800"
+                    }`}
+                  >
+                    <button
+                      onClick={() => setActiveChat(chat)}
+                      className="flex-1 min-w-0 text-left px-3 py-2 text-sm truncate"
+                      title={chat.title}
+                    >
+                      {chat.title}
+                    </button>
+
+                    <button
+                      onClick={() => renameChat(chat.id)}
+                      className="opacity-0 group-hover:opacity-100 px-1 text-xs transition"
+                      title="Rename chat"
+                      aria-label={`Rename ${chat.title}`}
+                    >
+                      ✏️
+                    </button>
+
+                    <button
+                      onClick={() => deleteChat(chat.id)}
+                      className="opacity-0 group-hover:opacity-100 px-1 text-xs transition"
+                      title="Delete chat"
+                      aria-label={`Delete ${chat.title}`}
+                    >
+                      🗑️
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
         </nav>
       </div>
 

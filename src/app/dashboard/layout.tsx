@@ -1,19 +1,30 @@
+import { redirect } from "next/navigation";
 import Sidebar from "@/components/Sidebar";
+import { ChatProvider } from "@/context/ChatContext";
+import { getCurrentUser } from "@/lib/auth";
 
-export default function DashboardLayout({
+export default async function DashboardLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  const user = await getCurrentUser();
+
+  if (!user) {
+    redirect("/login");
+  }
+
   return (
-    <main className="min-h-screen bg-gray-50 flex">
+    <ChatProvider>
+      <main className="h-screen bg-gray-50 flex overflow-hidden">
+        <aside className="w-64 h-screen shrink-0">
+          <Sidebar />
+        </aside>
 
-      <Sidebar />
-
-      <section className="flex-1 p-8">
-        {children}
-      </section>
-
-    </main>
+        <section className="flex-1 min-w-0 h-screen overflow-y-auto p-8">
+          {children}
+        </section>
+      </main>
+    </ChatProvider>
   );
 }

@@ -75,7 +75,20 @@ export async function POST(request: Request) {
       },
       ...recentMessages.map((msg: any): ChatCompletionMessageParam => ({
         role: msg.role === "ai" ? "assistant" : "user",
-        content: msg.text,
+        content: msg.image
+          ? [
+              {
+                type: "text",
+                text: msg.text || "",
+              },
+              {
+                type: "image_url",
+                image_url: {
+                  url: msg.image.dataUrl,
+                },
+              },
+            ]
+          : msg.text,
       })),
     ];
 

@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 
 type Settings = {
   name: string;
@@ -23,6 +24,8 @@ const defaultSettings: Settings = {
 };
 
 export default function SettingsPage() {
+  const router = useRouter();
+
   const [settings, setSettings] = useState<Settings>(defaultSettings);
   const [saved, setSaved] = useState(false);
 
@@ -65,6 +68,24 @@ export default function SettingsPage() {
     setSettings(defaultSettings);
     localStorage.removeItem("ninu-settings");
     setSaved(false);
+  };
+
+  const handleLogout = async () => {
+    try {
+      const response = await fetch("/api/auth/logout", {
+        method: "POST",
+        credentials: "include",
+      });
+
+      if (!response.ok) {
+        throw new Error("Logout failed");
+      }
+
+      router.push("/login");
+      router.refresh();
+    } catch (error) {
+      console.error("Logout error:", error);
+    }
   };
 
   return (
@@ -282,6 +303,27 @@ export default function SettingsPage() {
           </span>
         )}
       </div>
+
+      {/* Account */}
+      <section className="mt-8 rounded-3xl border border-red-200 bg-white p-7 shadow-sm">
+        <h2 className="text-xl font-bold text-red-600">
+          🚪 Account
+        </h2>
+
+        <p className="mt-1 text-sm text-gray-500">
+          Sign out of your Ninu AI account on this device.
+        </p>
+
+        <div className="mt-5">
+          <button
+            type="button"
+            onClick={handleLogout}
+            className="rounded-full border border-red-200 bg-red-50 px-7 py-3 font-semibold text-red-600 transition hover:bg-red-100"
+          >
+            Sign out
+          </button>
+        </div>
+      </section>
 
       {/* About */}
       <section className="mt-8 rounded-3xl border bg-white p-7 shadow-sm">
