@@ -1,17 +1,10 @@
 import { NextResponse } from "next/server";
-import OpenAI from "openai";
 import type { ChatCompletionMessageParam } from "openai/resources/chat/completions";
 
-const apiKey = process.env.OPENROUTER_API_KEY;
-
-if (!apiKey) {
-  throw new Error("OPENROUTER_API_KEY is not configured.");
-}
-
-const client = new OpenAI({
-  apiKey,
-  baseURL: "https://openrouter.ai/api/v1",
-});
+import { aiClient } from "@/lib/ai/client";
+import { AI_MODELS } from "@/lib/ai/models";
+import { AI_LIMITS } from "@/lib/ai/limits";
+import { getAIErrorMessage } from "@/lib/ai/errors";
 
 export async function POST(request: Request) {
   try {
@@ -59,9 +52,9 @@ export async function POST(request: Request) {
       },
     ];
 
-    const response = await client.chat.completions.create({
-      model: "openai/gpt-4.1-mini",
-      max_tokens: 600,
+    const response = await aiClient.chat.completions.create({
+      model: AI_MODELS.code,
+      max_tokens: AI_LIMITS.code,
       messages,
     });
 
@@ -72,14 +65,12 @@ export async function POST(request: Request) {
     return NextResponse.json({
       reply,
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Code AI Error:", error);
 
     return NextResponse.json(
       {
-        error:
-          error?.message ||
-          "Ninu Code AI is temporarily unavailable.",
+        error: getAIErrorMessage(error),
       },
       {
         status: 500,
