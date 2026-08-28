@@ -1,16 +1,8 @@
 import { NextResponse } from "next/server";
-import OpenAI from "openai";
-
-const apiKey = process.env.OPENROUTER_API_KEY;
-
-if (!apiKey) {
-  throw new Error("OPENROUTER_API_KEY is not configured.");
-}
-
-const client = new OpenAI({
-  apiKey,
-  baseURL: "https://openrouter.ai/api/v1",
-});
+import { aiClient } from "@/lib/ai/client";
+import { AI_MODELS } from "@/lib/ai/models";
+import { AI_LIMITS } from "@/lib/ai/limits";
+import { getAIErrorMessage } from "@/lib/ai/errors";
 
 export async function POST(request: Request) {
   try {
@@ -55,9 +47,9 @@ export async function POST(request: Request) {
 
     const limitedText = text.slice(0, 30000);
 
-    const response = await client.chat.completions.create({
-      model: "openai/gpt-4.1-mini",
-      max_tokens: 2000,
+    const response = await aiClient.chat.completions.create({
+      model: AI_MODELS.documents,
+      max_tokens: AI_LIMITS.documents,
       messages: [
         {
           role: "system",
@@ -89,14 +81,12 @@ export async function POST(request: Request) {
       fileName: file.name,
       reply,
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Documents AI Error:", error);
 
     return NextResponse.json(
       {
-        error:
-          error?.message ||
-          "Ninu Documents AI is temporarily unavailable.",
+        error: getAIErrorMessage(error),
       },
       {
         status: 500,
