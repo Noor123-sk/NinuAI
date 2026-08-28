@@ -1,6 +1,6 @@
 export const AI_LIMITS = {
   chat: 1000,
-  code: 400,
+  code: 300,
   documents: 500,
   vision: 1000,
   image: 4096,
