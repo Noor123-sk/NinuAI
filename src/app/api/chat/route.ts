@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import OpenAI from "openai";
 import type { ChatCompletionMessageParam } from "openai/resources/chat/completions";
+import { AI_MODELS } from "@/lib/ai/models";
+import { AI_LIMITS } from "@/lib/ai/limits";
 
 const apiKey = process.env.OPENROUTER_API_KEY;
 
@@ -93,8 +95,8 @@ export async function POST(request: Request) {
     ];
 
     const response = await client.chat.completions.create({
-      model: "openai/gpt-4.1-mini",
-      max_tokens: 1000,
+      model: AI_MODELS.chat,
+      max_tokens: AI_LIMITS.chat,
       messages: chatMessages,
     });
 

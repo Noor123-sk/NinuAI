@@ -1,5 +1,5 @@
 export const AI_MODELS = {
-  chat: "openai/gpt-4.1-mini",
+  chat: "minimax/minimax-m3:free",
   code: "inclusionai/ling-3.0-flash-fin:free",
   documents: "poolside/laguna-s-2.1:free",
   vision: "google/gemini-2.5-flash",
