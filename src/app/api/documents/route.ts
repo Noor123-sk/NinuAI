@@ -73,6 +73,11 @@ export async function POST(request: Request) {
       ],
     });
 
+    console.log(
+      "DOCUMENT AI RAW RESPONSE:",
+      JSON.stringify(response, null, 2)
+    );
+
     const reply =
       response.choices[0]?.message?.content ||
       "Ninu Documents AI could not analyze the document.";
