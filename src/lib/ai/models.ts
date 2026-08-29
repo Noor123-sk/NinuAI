@@ -5,5 +5,5 @@ export const AI_MODELS = {
   vision: "google/gemini-2.5-flash",
   image: "google/gemini-2.5-flash-image",
   dataAnalysis: "openai/gpt-4.1-mini",
-  automation: "openai/gpt-4.1-mini",
+  automation: "minimax/minimax-m3:free",
 } as const;

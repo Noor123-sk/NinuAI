@@ -1,5 +1,7 @@
 import { NextResponse } from "next/server";
 import OpenAI from "openai";
+import { AI_MODELS } from "@/lib/ai/models";
+import { AI_LIMITS } from "@/lib/ai/limits";
 
 const apiKey = process.env.OPENROUTER_API_KEY;
 
@@ -34,8 +36,8 @@ export async function POST(request: Request) {
     }
 
     const response = await client.chat.completions.create({
-      model: "google/gemini-2.5-flash",
-      max_tokens: 1000,
+      model: AI_MODELS.vision,
+      max_tokens: AI_LIMITS.vision,
       messages: [
         {
           role: "user",

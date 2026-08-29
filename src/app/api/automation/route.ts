@@ -2,6 +2,8 @@ import { NextResponse } from "next/server";
 import OpenAI from "openai";
 import { randomUUID } from "crypto";
 import { prisma } from "@/lib/prisma";
+import { AI_MODELS } from "@/lib/ai/models";
+import { AI_LIMITS } from "@/lib/ai/limits";
 
 const client = new OpenAI({
   apiKey: process.env.OPENROUTER_API_KEY!,
@@ -281,8 +283,8 @@ Important:
 
     const response =
       await client.chat.completions.create({
-        model: "openai/gpt-4.1-mini",
-        max_tokens: 1200,
+        model: AI_MODELS.automation,
+        max_tokens: AI_LIMITS.automation,
         messages: [
           {
             role: "system",
