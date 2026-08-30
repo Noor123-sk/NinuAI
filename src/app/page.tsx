@@ -16,6 +16,22 @@ type Chat = {
 
 const STORAGE_KEY = "ninu-ai-chats";
 
+function formatAIText(text: string) {
+  let clean = text;
+
+  // Remove JSON wrapper if the API returns {"reply":"..."}
+  try {
+    const parsed = JSON.parse(clean);
+    if (parsed?.reply) clean = parsed.reply;
+  } catch {
+    // Keep normal text unchanged
+  }
+
+  clean = clean.replace(/\\n/g, "\n");
+
+  return clean;
+}
+
 export default function Dashboard() {
   const [chats, setChats] = useState<Chat[]>([
     {
@@ -174,7 +190,7 @@ export default function Dashboard() {
                     index === chat.messages.length - 1
                       ? {
                           role: "ai",
-                          text: aiText,
+                          text: formatAIText(aiText),
                         }
                       : message
                   ),
@@ -198,7 +214,7 @@ export default function Dashboard() {
                     index === chat.messages.length - 1
                       ? {
                           role: "ai",
-                          text: aiText,
+                          text: formatAIText(aiText),
                         }
                       : message
                   ),
@@ -219,7 +235,7 @@ export default function Dashboard() {
                   index === chat.messages.length - 1
                     ? {
                         role: "ai",
-                        text: "Ninu AI is temporarily unavailable.",
+                        text: "Ninu AI is temporarily unavailable. Please try again.",
                       }
                     : message
                 ),
@@ -233,35 +249,33 @@ export default function Dashboard() {
   };
 
   return (
-    <div className="flex min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-[#f7f7f8] text-gray-900">
       {sidebarOpen && (
         <button
-          className="fixed inset-0 bg-black/30 z-30 md:hidden"
+          className="fixed inset-0 z-30 bg-black/30 md:hidden"
           onClick={() => setSidebarOpen(false)}
           aria-label="Close sidebar"
         />
       )}
 
+      {/* Sidebar */}
       <aside
-        className={`fixed md:static z-40 top-0 left-0 h-screen w-72 bg-white border-r p-5 flex flex-col transition-transform duration-200 ${
+        className={`fixed left-0 top-0 z-40 flex h-screen w-[280px] flex-col border-r border-gray-200 bg-white p-4 transition-transform duration-200 ${
           sidebarOpen
             ? "translate-x-0"
             : "-translate-x-full md:translate-x-0"
         }`}
       >
-        <div className="flex items-center justify-between mb-8">
+        <div className="mb-6 flex items-center justify-between">
           <div>
-            <h1 className="text-2xl font-bold">
-              Ninu AI
-            </h1>
-
-            <p className="text-xs text-gray-500 mt-1">
+            <h1 className="text-xl font-bold tracking-tight">Ninu AI</h1>
+            <p className="mt-1 text-xs text-gray-500">
               Your AI workspace
             </p>
           </div>
 
           <button
-            className="md:hidden text-gray-500"
+            className="rounded-lg px-2 py-1 text-gray-500 hover:bg-gray-100 md:hidden"
             onClick={() => setSidebarOpen(false)}
           >
             ✕
@@ -270,182 +284,200 @@ export default function Dashboard() {
 
         <button
           onClick={createNewChat}
-          className="w-full bg-black text-white rounded-xl px-4 py-3 font-medium hover:opacity-90 transition"
+          className="mb-6 w-full rounded-xl bg-black px-4 py-3 text-sm font-medium text-white transition hover:opacity-85"
         >
           + New Chat
         </button>
 
-        <div className="mt-8 flex-1 overflow-y-auto">
-          <p className="text-xs font-semibold text-gray-400 uppercase mb-3">
-            Recent chats
-          </p>
+        <p className="mb-3 px-2 text-[11px] font-semibold uppercase tracking-wider text-gray-400">
+          Recent chats
+        </p>
 
-          <div className="space-y-2">
-            {chats.map((chat) => (
-              <button
-                key={chat.id}
-                onClick={() => {
-                  setActiveChatId(chat.id);
-                  setSidebarOpen(false);
-                }}
-                className={`w-full text-left px-3 py-3 rounded-xl text-sm truncate transition ${
-                  chat.id === activeChatId
-                    ? "bg-gray-100 font-medium"
-                    : "hover:bg-gray-50 text-gray-600"
-                }`}
-              >
-                💬 {chat.title}
-              </button>
-            ))}
-          </div>
+        <div className="flex-1 space-y-1 overflow-y-auto">
+          {chats.map((chat) => (
+            <button
+              key={chat.id}
+              onClick={() => {
+                setActiveChatId(chat.id);
+                setSidebarOpen(false);
+              }}
+              className={`w-full truncate rounded-xl px-3 py-3 text-left text-sm transition ${
+                chat.id === activeChatId
+                  ? "bg-gray-100 font-medium"
+                  : "text-gray-600 hover:bg-gray-50"
+              }`}
+            >
+              💬 {chat.title}
+            </button>
+          ))}
         </div>
 
-        <div className="border-t pt-4">
-          <button className="w-full text-left px-3 py-3 rounded-xl hover:bg-gray-50 text-sm">
+        <div className="border-t border-gray-200 pt-3">
+          <Link
+            href="/dashboard/settings"
+            className="block w-full rounded-xl px-3 py-3 text-left text-sm text-gray-600 transition hover:bg-gray-50"
+          >
             ⚙️ Settings
-          </button>
+          </Link>
 
-          <button className="w-full text-left px-3 py-3 rounded-xl hover:bg-gray-50 text-sm">
+          <Link
+            href="/dashboard/settings"
+            className="block w-full rounded-xl px-3 py-3 text-left text-sm text-gray-600 transition hover:bg-gray-50"
+          >
             👤 Profile
-          </button>
+          </Link>
         </div>
       </aside>
 
-      <main className="flex-1 min-w-0">
-        <div className="max-w-6xl mx-auto p-5 md:p-10">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <button
-                onClick={() => setSidebarOpen(true)}
-                className="md:hidden bg-white border rounded-xl px-3 py-2"
+      {/* Main */}
+      <main className="min-h-screen md:ml-[280px]">
+        <div className="mx-auto flex min-h-screen w-full max-w-5xl flex-col px-4 py-4 sm:px-6 md:px-10 md:py-8">
+
+          {/* Header */}
+          <header className="flex items-center gap-3 border-b border-gray-200 pb-4">
+            <button
+              onClick={() => setSidebarOpen(true)}
+              className="rounded-xl border border-gray-200 bg-white px-3 py-2 text-lg shadow-sm md:hidden"
+              aria-label="Open menu"
+            >
+              ☰
+            </button>
+
+            <div>
+              <h2 className="text-lg font-semibold sm:text-xl">
+                Ninu AI
+              </h2>
+              <p className="text-xs text-gray-500">
+                Your all-in-one AI workspace
+              </p>
+            </div>
+          </header>
+
+          {/* Chat */}
+          <section className="flex flex-1 flex-col">
+            <div className="flex-1 py-6 sm:py-8">
+              <div className="mb-6">
+                <p className="text-sm font-medium text-gray-500">
+                  {activeChat?.title || "New conversation"}
+                </p>
+              </div>
+
+              <div className="space-y-6">
+                {messages.map((message, index) => (
+                  <div
+                    key={index}
+                    className={`flex ${
+                      message.role === "user"
+                        ? "justify-end"
+                        : "justify-start"
+                    }`}
+                  >
+                    <div
+                      className={`max-w-[88%] sm:max-w-[75%] ${
+                        message.role === "user"
+                          ? "rounded-2xl rounded-br-md bg-black px-4 py-3 text-white"
+                          : "px-1 py-1 text-gray-800"
+                      }`}
+                    >
+                      {message.role === "ai" && (
+                        <div className="mb-2 flex items-center gap-2 text-sm font-semibold">
+                          <span className="flex h-7 w-7 items-center justify-center rounded-full bg-black text-white">
+                            N
+                          </span>
+                          Ninu AI
+                        </div>
+                      )}
+
+                      <div
+                        className={`whitespace-pre-wrap break-words text-[15px] leading-7 ${
+                          message.role === "user"
+                            ? "text-white"
+                            : "text-gray-700"
+                        }`}
+                      >
+                        {message.text ? (
+                          formatAIText(message.text)
+                        ) : (
+                          <span className="animate-pulse text-gray-400">
+                            Ninu is thinking...
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                ))}
+
+                <div ref={messagesEndRef} />
+              </div>
+            </div>
+
+            {/* Input */}
+            <div className="sticky bottom-0 bg-[#f7f7f8] pb-3 pt-2">
+              <div className="rounded-2xl border border-gray-300 bg-white p-2 shadow-sm">
+                <div className="flex items-end gap-2">
+                  <textarea
+                    value={input}
+                    onChange={(e) => setInput(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter" && !e.shiftKey) {
+                        e.preventDefault();
+                        sendMessage();
+                      }
+                    }}
+                    placeholder="Ask Ninu anything..."
+                    disabled={isLoading}
+                    rows={1}
+                    className="min-h-[44px] flex-1 resize-none bg-transparent px-3 py-2.5 text-sm outline-none placeholder:text-gray-400 disabled:opacity-50"
+                  />
+
+                  <button
+                    onClick={sendMessage}
+                    disabled={isLoading || !input.trim()}
+                    className="rounded-xl bg-black px-4 py-2.5 text-sm font-medium text-white transition hover:opacity-85 disabled:cursor-not-allowed disabled:opacity-30"
+                  >
+                    {isLoading ? "..." : "Send"}
+                  </button>
+                </div>
+              </div>
+
+              <p className="mt-2 text-center text-[11px] text-gray-400">
+                Ninu AI can make mistakes. Check important information.
+              </p>
+            </div>
+
+            {/* Tools */}
+            <div className="grid grid-cols-1 gap-3 pb-4 pt-5 sm:grid-cols-3">
+              <Link
+                href="/image-generator"
+                className="rounded-2xl border border-gray-200 bg-white p-4 transition hover:-translate-y-0.5 hover:shadow-sm"
               >
-                ☰
-              </button>
+                <div className="mb-1 text-sm font-semibold">
+                  🎨 Image Generator
+                </div>
+                <p className="text-xs text-gray-500">
+                  Create images with AI.
+                </p>
+              </Link>
 
-              <div>
-                <h2 className="text-3xl font-bold">
-                  Welcome to Ninu AI 👋
-                </h2>
+              <div className="rounded-2xl border border-gray-200 bg-white p-4">
+                <div className="mb-1 text-sm font-semibold">
+                  💻 Code Assistant
+                </div>
+                <p className="text-xs text-gray-500">
+                  Build and debug code faster.
+                </p>
+              </div>
 
-                <p className="text-gray-600 mt-2">
-                  Your all-in-one AI workspace
+              <div className="rounded-2xl border border-gray-200 bg-white p-4">
+                <div className="mb-1 text-sm font-semibold">
+                  ⚡ Automation
+                </div>
+                <p className="text-xs text-gray-500">
+                  Automate daily workflows.
                 </p>
               </div>
             </div>
-          </div>
-
-          <div className="mt-10 bg-white rounded-3xl shadow-lg border overflow-hidden">
-            <div className="p-6 border-b">
-              <h3 className="text-xl font-bold">
-                🤖 {activeChat?.title || "Ninu AI"}
-              </h3>
-
-              <p className="text-sm text-gray-500 mt-1">
-                Powered by Ninu AI
-              </p>
-            </div>
-
-            <div className="p-6 space-y-4 max-h-[520px] overflow-y-auto">
-              {messages.map((message, index) => (
-                <div
-                  key={index}
-                  className={
-                    message.role === "ai"
-                      ? "bg-gray-100 p-4 rounded-2xl max-w-3xl"
-                      : "bg-black text-white p-4 rounded-2xl ml-auto max-w-2xl"
-                  }
-                >
-                  <div className="text-xs opacity-60 mb-1">
-                    {message.role === "ai" ? "Ninu AI" : "You"}
-                  </div>
-
-                  {message.text ? (
-                    <div className="whitespace-pre-wrap break-words leading-relaxed">
-                      {message.text}
-                    </div>
-                  ) : (
-                    <span className="animate-pulse text-gray-500">
-                      Ninu is thinking...
-                    </span>
-                  )}
-                </div>
-              ))}
-
-              <div ref={messagesEndRef} />
-            </div>
-
-            <div className="border-t p-5">
-              <div className="flex gap-3 items-end">
-                <textarea
-                  value={input}
-                  onChange={(e) => setInput(e.target.value)}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter" && !e.shiftKey) {
-                      e.preventDefault();
-                      sendMessage();
-                    }
-                  }}
-                  placeholder="Ask Ninu anything..."
-                  disabled={isLoading}
-                  rows={1}
-                  className="flex-1 resize-none border rounded-2xl px-5 py-3 outline-none focus:ring-2 focus:ring-black disabled:bg-gray-100"
-                />
-
-                <button
-                  onClick={sendMessage}
-                  disabled={isLoading || !input.trim()}
-                  className="bg-black text-white px-6 py-3 rounded-2xl disabled:opacity-40 hover:opacity-90 transition"
-                >
-                  {isLoading ? "..." : "Send"}
-                </button>
-              </div>
-
-              <p className="text-xs text-gray-400 mt-3">
-                Enter to send • Shift + Enter for a new line
-              </p>
-            </div>
-          </div>
-
-          {/* Tool Cards */}
-          <div className="grid md:grid-cols-3 gap-6 mt-10">
-
-            {/* Image Generator */}
-            <Link
-              href="/image-generator"
-              className="block bg-white p-6 rounded-2xl border hover:shadow-md transition cursor-pointer"
-            >
-              <h3 className="font-bold text-xl">
-                🎨 Image Generator
-              </h3>
-
-              <p className="text-gray-600 mt-2">
-                Create images with AI.
-              </p>
-            </Link>
-
-            {/* Code Assistant */}
-            <div className="bg-white p-6 rounded-2xl border hover:shadow-md transition cursor-pointer">
-              <h3 className="font-bold text-xl">
-                💻 Code Assistant
-              </h3>
-
-              <p className="text-gray-600 mt-2">
-                Build and debug code faster.
-              </p>
-            </div>
-
-            {/* Automation */}
-            <div className="bg-white p-6 rounded-2xl border hover:shadow-md transition cursor-pointer">
-              <h3 className="font-bold text-xl">
-                ⚡ Automation
-              </h3>
-
-              <p className="text-gray-600 mt-2">
-                Automate daily workflows.
-              </p>
-            </div>
-
-          </div>
+          </section>
         </div>
       </main>
     </div>
